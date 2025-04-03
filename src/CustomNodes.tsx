@@ -1,7 +1,7 @@
 import React from "react"
-import { Handle, NodeProps, Position } from "@xyflow/react"
+import { Handle, Position } from "@xyflow/react"
 
-export const StartNode: React.FC<NodeProps> = () => {
+export const StartNode: React.FC = () => {
     return (
         <div className="flex flex-row border border-solid border-gray-300 rounded-lg px-4 py-4 items-center space-x-3 w-60">
             {/* Image Placeholder */}
@@ -16,18 +16,18 @@ export const StartNode: React.FC<NodeProps> = () => {
             </div>
 
             {/* Connection Handle */}
-            <Handle type="source" position={Position.Bottom} className="bg-gray-500" />
+            <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }}/>
         </div>
     )
 }
 
-export const EndNode: React.FC<NodeProps> = () => {
+export const EndNode: React.FC = () => {
     return (
         <>
             <div className="border border-gray-400 rounded-4xl px-25 py-4 w-60 bg-gray-200">
                 <p className="text-gray-400 text-sm font-semibold">END</p>
             </div>
-            <Handle type="source" position={Position.Top} />
+            <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }}/>
         </>
     )
 }
