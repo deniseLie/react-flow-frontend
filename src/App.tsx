@@ -17,21 +17,6 @@ function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // const onConnect = useCallback(
-  //   (connection: Connection) => {
-
-  //     const edge = {
-  //       id: `edge-${connection.source}-${connection.target}`,
-  //       source: connection.source,
-  //       target: connection.target,
-  //       type: 'addBtn',
-  //     }
-
-  //     setEdges((oldEdges) => [...oldEdges, edge]);
-    
-  //   }, [setEdges],
-  // )
-
   const handleAddConnection = (source: string, target: string) => {
     // Logic to add a new edge
     const newEdge = {

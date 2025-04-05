@@ -32,7 +32,28 @@ export const EndNode: React.FC = () => {
     )
 }
 
+export const ActionNode: React.FC = () => {
+    return (
+        <div className="flex flex-row border border-solid border-gray-300 rounded-lg px-4 py-4 items-center space-x-3 w-60">
+            {/* Image Placeholder */}
+            <div className="w-10 h-10 bg-green-100 flex items-center justify-center rounded-md">
+                <img src="/action_icon.png" alt="Action Icon" className="fit" />
+            </div>
+
+            {/* Text */}
+            <div>
+                <p className="text-gray-700 font-semibold text-sm">Action Node</p>
+            </div>
+
+            {/* Connection Handle */}
+            <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }}/>
+            <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }}/>
+        </div>
+    )
+}
+
 export const nodeTypes = {
     start: StartNode,
-    end: EndNode
+    end: EndNode,
+    action: ActionNode
 }
