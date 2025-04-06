@@ -106,7 +106,7 @@ export const ConditionalNode: React.FC<ConditionalNodeProps> = ({ data }) => {
 export const BranchNode: React.FC<NodeProps> = ({ data })  => {
     return (
         <>
-            <div className="border border-gray-400 rounded-4xl px-25 py-4 w-60 bg-gray-200">
+            <div className="border border-gray-400 rounded-4xl px-5 py-4 w-60 bg-gray-200 text-center">
                 <p className="text-gray-400 text-sm font-semibold">{data.label}</p>
             </div>
             <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }}/>
@@ -119,7 +119,7 @@ export const ElseNode: React.FC<NodeProps> = ({ data })  => {
     console.log("else data", data);
     return (
         <>
-            <div className="border border-gray-400 rounded-4xl px-25 py-4 w-60 bg-gray-200">
+            <div className="border border-gray-400 rounded-4xl px-5 py-4 w-60 bg-gray-200 text-center">
                 <p className="text-gray-400 text-sm font-semibold">{data.label}</p>
             </div>
             <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }}/>

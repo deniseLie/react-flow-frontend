@@ -124,13 +124,13 @@ export const AddBtnEdge: React.FC<EdgeProps> = ({
                         id: `edge-${newNodeId}-${ifBranchId}`, // ifelse-branch1
                         source: newNodeId,
                         target: ifBranchId,
-                        type: 'addBtn',
+                        type: 'step',
                     },
                     {
                         id: `edge-${newNodeId}-${elseBranchId}`, // ifelse-branch2
                         source: newNodeId,
                         target: elseBranchId,
-                        type: 'addBtn',
+                        type: 'step',
                     },
                     {
                         id: `edge-${ifBranchId}-${target}`, // branch1-end

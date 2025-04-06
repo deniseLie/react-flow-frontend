@@ -76,15 +76,14 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
         nodes: Node[], addedBranches: Branch[], deletedBranchIds: string[]
     ): Node[] => {
 
-        // Remove deleted branch nodes and their corresponding end nodes
+        // If branches are deleted, trigger downstream node deletion
+        deletedBranchIds.forEach((deletedBranchId) => {
+            deleteDownstream(deletedBranchId, setNodes, setEdges, edges);
+        });
+
+        // Update label for existing nodes if needed
         const remainingNodes = nodes
-            .filter(
-                (n) =>
-                    !deletedBranchIds.includes(n.id) &&
-                    !deletedBranchIds.some((id) => n.id === `${id}-end`)
-            )
             .map((node) => {
-                // Update label for existing nodes if needed
                 const matchingBranch = branches.find((branch: Branch) => branch.id === node.id);
                 if (matchingBranch) {
                     return {
@@ -97,24 +96,44 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                 }
                 return node;
             });
+        
+        // Find the position of the last "else" node (or any node you choose as the reference)
+        const elseNode = nodes.find((node) => node.type === 'else');
+        
+        if (!elseNode) {
+            console.error('No "else" node found!');
+            return remainingNodes;  // If no "else" node is found, return the remaining nodes as they are.
+        }
+
+        // Calculate even X positions for added branches
+        let previousX = elseNode.position.x || 100;
+        let previousY = elseNode.position.y || 200;
+        
+        // Calculate even X positions for added branches
+        const newNodes = addedBranches.map((branch, index) => {
+            const xPosition = previousX + 250; // Evenly space the branch nodes along the X-axis
+            const yPosition = previousY; // Keep Y position constant (adjust as needed)
     
-        // Create new nodes for added branches
-        const newNodes = addedBranches.flatMap((branch) => {
             const branchNode = {
                 id: branch.id,
-                position: { x: Math.random() * 800, y: Math.random() * 400 },
+                position: { x: xPosition, y: yPosition },
                 type: 'branch',
                 data: { label: branch.label },
             };
     
             const endNode = {
                 id: `${branch.id}-end`,
-                position: { x: Math.random() * 800, y: Math.random() * 400 + 100 },
+                position: { x: xPosition, y: yPosition + 200 }, // Slightly adjust Y for end node
                 type: 'end',
                 data: { label: 'END' },
             };
+
+            // Update the previous X and Y for the next branch
+            previousX = xPosition;
+            previousY = yPosition;
+
             return [branchNode, endNode];
-        });
+        }).flat();
     
         return [...remainingNodes, ...newNodes];
     };
@@ -138,7 +157,7 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                 id: `edge-${conditionalNodeId}-${branch.id}`,
                 source: conditionalNodeId,
                 target: branch.id,
-                type: 'conditional',
+                type: 'step',
             },
             {
                 id: `edge-${branch.id}-${branch.id}-end`,
