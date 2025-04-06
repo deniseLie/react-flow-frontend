@@ -51,8 +51,6 @@ export const AddBtnEdge: React.FC<EdgeProps> = ({
                 position: { 
                     x: (targetNode.position.x + sourceX) / 2 - 60, 
                     y: targetNode.position.y,
-                    // x: sourceX - 120, 
-                    // y: sourceY + 100 
                 },
                 type: 'action',
                 data: { label: "Action Node" }
