@@ -1,15 +1,11 @@
 import React from "react"
 import { Handle, Position } from "@xyflow/react"
+import { Branch } from "./types"
 
 interface NodeProps {
     data: {
       label: string
     }
-}
-
-interface Branch {
-    id: string;
-    name: string;
 }
 
 interface ConditionalNodeData {
@@ -74,6 +70,7 @@ export const ActionNode: React.FC<NodeProps> = ({ data }) => {
 
 export const ConditionalNode: React.FC<ConditionalNodeProps> = ({ data }) => {
     const branches = data?.branches || [];
+    // console.log("ConditionalNode", branches);
 
     return (
         <div className="flex flex-row border border-solid border-gray-300 rounded-lg px-4 py-4 items-center space-x-3 w-60">
@@ -119,10 +116,24 @@ export const BranchNode: React.FC<NodeProps> = ({ data })  => {
     )
 }
 
+export const ElseNode: React.FC<NodeProps> = ({ data })  => {
+    console.log("else data", data);
+    return (
+        <>
+            <div className="border border-gray-400 rounded-4xl px-25 py-4 w-60 bg-gray-200">
+                <p className="text-gray-400 text-sm font-semibold">{data.label}</p>
+            </div>
+            <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }}/>
+            <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }}/>
+        </>
+    )
+}
+
 export const nodeTypes = {
     start: StartNode,
     end: EndNode,
     action: ActionNode,
     conditional: ConditionalNode,
-    branch: BranchNode
+    branch: BranchNode,
+    else: ElseNode
 }

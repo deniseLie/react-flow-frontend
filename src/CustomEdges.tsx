@@ -58,8 +58,8 @@ export const AddBtnEdge: React.FC<EdgeProps> = ({
                     label: type === 'action' ? 'Action Node' : 'If / Else',
                     ...(type === 'conditional' && {
                         branches: [
-                            { id: ifBranchId, name: 'Branch 1' },
-                            { id: elseBranchId, name: 'Else' },
+                            { id: ifBranchId, label: 'Branch 1', type: 'if' },
+                            { id: elseBranchId, label: 'Else', type: 'else' },
                         ],
                     }),
                 }
@@ -76,7 +76,7 @@ export const AddBtnEdge: React.FC<EdgeProps> = ({
                     {
                         id: elseBranchId,
                         position: { x: baseX + 10, y: targetNode.position.y + shiftAmount },
-                        type: 'branch',
+                        type: 'else',
                         data: { label: 'ELSE' },
                     },
                     {

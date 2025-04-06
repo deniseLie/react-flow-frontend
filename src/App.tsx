@@ -24,7 +24,7 @@ function App() {
   const [selectedNode, setselectedNode] = useState<string | null>(null);
 
   const handleNodeClick = useCallback((_: any, node: any) => {
-    if (node.id !== 'start' && node.id !== 'end' && node.type !== 'branch') {
+    if (node.type == 'action' || node.type == 'conditional') {
       setselectedNode(node);
     }
   }, []);

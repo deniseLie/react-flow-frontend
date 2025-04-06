@@ -1,44 +1,50 @@
 import React, { useState } from "react";
+import { Branch } from "./types";
 
 interface ConditionalNodeFormProps {
-    nodeName: string;
-    setNodeName: React.Dispatch<React.SetStateAction<string>>;
+    branches: Branch[]
+    setBranches: Function
 }
 
-const ConditionalNodeForm: React.FC<ConditionalNodeFormProps> = ({ 
-    nodeName, setNodeName
-}) => {
-
-    const [branches, setBranches] = useState([{ id: crypto.randomUUID(), name: 'Branch 1' }]);
-    const [elseBr, setElseBr] = useState('Else');
+const ConditionalNodeForm: React.FC<ConditionalNodeFormProps> = ({ branches, setBranches }) => {
 
     // Function : Handle Branch Name Change
     const handleBranchName = (event: React.ChangeEvent<HTMLInputElement>, id: string) => {
-        setBranches((prev) => prev.map((b) => 
+        setBranches((prev: Branch[]) => prev.map((b: Branch) => 
             b.id == id 
-                ? { ...b, name: event.target.value }
+                ? { ...b, label: event.target.value }
                 : b
             )
         )
     }
 
+    // Function: Handle Else Branch Name Change
+    const updateElseBr = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setBranches((prev: Branch[]) => prev.map((b: Branch) => 
+            b.type == 'else'
+                ? { ...b, label: event.target.value }
+                : b
+           )
+        )
+    }
+
     // Function : Handle Add Branch
-    const addBranch = () => {
-        console.log('add')
-        setBranches((prevBr: any[]) => [
-            ...prevBr, 
-            { id: crypto.randomUUID(), name: `Branch #${prevBr.length + 1}`}
+    const addBranch = (event: React.MouseEvent) => {
+        event.preventDefault();
+        setBranches((prev: Branch[]) => [
+            ...prev, 
+            { id: crypto.randomUUID(), label: `Branch #${prev.length}`, type: 'if' }
         ]);
     };   
 
     // Function : Handle Delete Branch
     const handleDeleteBranch = (id: string) => {
-        setBranches(prevBrs => prevBrs.filter(prevBr => prevBr.id !== id))
+        setBranches((prev: Branch[]) => prev.filter((branch: Branch) => branch.id !== id))
     }
 
     // Function : Add Filter on branhc
     const addFilter = (branch: any) => {
-        console.log(branch)
+        console.log("FILTER", branch);
     }
 
     return (
@@ -46,33 +52,33 @@ const ConditionalNodeForm: React.FC<ConditionalNodeFormProps> = ({
             {/* Branch */}
             <label className="block text-sm font-medium mb-1">BRANCHES</label>
             
-            {branches?.map((branch, index) => (
-                <div key={index} className="border p-4 my-2 rounded">
-                    <div className="flex flex-row">
-                        <input
-                            type="text"
-                            className="w-full border border-gray-300 rounded px-3 py-2 mb-4 mr-5"
-                            value={branch?.name}
-                            onChange={(event) => handleBranchName(event, branch.id)}
-                        />
-                        <button
-                            onClick={() => handleDeleteBranch(branch.id)}
-                        >
-                            X
-                        </button>
+            {/* {branches?.map((branch: Branch, index: any) => ( */}
+            {branches
+                ?.filter((branch: Branch) => branch.type !== 'else')
+                ?.map((branch: Branch, index: any) => (
+                    <div key={index} className="border p-4 my-2 rounded">
+                        <div className="flex flex-row">
+                            <input
+                                type="text"
+                                className="w-full border border-gray-300 rounded px-3 py-2 mb-4 mr-5"
+                                value={branch?.label}
+                                onChange={(event) => handleBranchName(event, branch.id)}
+                            />
+                            <button
+                                onClick={() => handleDeleteBranch(branch.id)}
+                            >
+                                X
+                            </button>
+                        </div>
+                        {/* <button onClick={() => addFilter(branch)}>
+                            + Add filter
+                        </button> */}
                     </div>
-                    <button
-                        onClick={() => addFilter(branch)}
-                    >
-                        + Add filter
-                    </button>
-                </div>
-            ))}
+                )
+            )}
 
             <div className="mb-10">
-                <button onClick={addBranch}>
-                    + Add branch
-                </button>
+                <button onClick={(e) => addBranch(e)}>+ Add branch</button>
             </div>
 
             {/* Else */}
@@ -80,8 +86,8 @@ const ConditionalNodeForm: React.FC<ConditionalNodeFormProps> = ({
             <input
                 type="text"
                 className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
-                value={elseBr}
-                onChange={(e) => setElseBr(e.target.value)}
+                value={branches.find(branch => branch.type === 'else')?.label || ''}
+                onChange={(e) => updateElseBr(e)}
             />
         </div>
     )

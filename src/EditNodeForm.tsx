@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Node, useReactFlow } from '@xyflow/react';
 import ConditionalNodeForm from './ConditionalNodeForm';
+import { Branch } from './types';
 
 interface EditNodeFormProps {
     selectedNode: any;
@@ -16,6 +17,9 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
     const node: Node | undefined = getNode(selectedNode.id); 
 
     const [nodeName, setNodeName] = useState('');
+    const [branches, setBranches] = useState<Branch[]>(
+        selectedNode?.data?.branches || [{ id: crypto.randomUUID(), label: 'Branch 1' }]
+    );
 
     useEffect(() => {
         if (node?.data?.label && typeof node.data.label === 'string') {
@@ -31,15 +35,118 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
     // Function: Submit updated node name
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
+
         setNodes((nodes) =>
           nodes.map((n) =>
             n.id === selectedNode.id 
-                ? { ...n, data: { ...n.data, label: nodeName } } 
+                ? { ...n, 
+                    data: { ...n.data, label: nodeName, ...(selectedNode?.type === 'conditional' && { branches })} 
+                  } 
                 : n
           )
         );
+
+        // Add and Delete Branch Nodes
+        if (selectedNode?.type === 'conditional') {
+
+            const { addedBranches, deletedBranchIds } = getBranchChanges(selectedNode.data?.branches, branches);
+            setNodes((nodes) => updateNodesForBranches(nodes, addedBranches, deletedBranchIds));
+            setEdges((edges) => updateEdgesForBranches(edges, addedBranches, deletedBranchIds, selectedNode.id));
+        }
         onClose();
     };
+
+    // Function : Get Branch Changes
+    const getBranchChanges = (oldBranches: Branch[], newBranches: Branch[]) => {
+        const addedBranches = newBranches.filter(
+            (branch) => !oldBranches?.find((old) => old.id === branch.id)
+        );
+        const deletedBranchIds = oldBranches
+            ?.filter((old) => !newBranches.find((b) => b.id === old.id))
+            .map((b) => b.id) || [];
+    
+        return { addedBranches, deletedBranchIds };
+    };
+    
+    // Function : Update Node based on Branch
+    const updateNodesForBranches = (
+        nodes: Node[], addedBranches: Branch[], deletedBranchIds: string[]
+    ): Node[] => {
+
+        // Remove deleted branch nodes and their corresponding end nodes
+        const remainingNodes = nodes
+            .filter(
+                (n) =>
+                    !deletedBranchIds.includes(n.id) &&
+                    !deletedBranchIds.some((id) => n.id === `${id}-end`)
+            )
+            .map((node) => {
+                // Update label for existing nodes if needed
+                const matchingBranch = branches.find((branch: Branch) => branch.id === node.id);
+                if (matchingBranch) {
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            label: matchingBranch.label,
+                        },
+                    };
+                }
+                return node;
+            });
+    
+        // Create new nodes for added branches
+        const newNodes = addedBranches.flatMap((branch) => {
+            const branchNode = {
+                id: branch.id,
+                position: { x: Math.random() * 800, y: Math.random() * 400 },
+                type: 'branch',
+                data: { label: branch.label },
+            };
+    
+            const endNode = {
+                id: `${branch.id}-end`,
+                position: { x: Math.random() * 800, y: Math.random() * 400 + 100 },
+                type: 'end',
+                data: { label: 'END' },
+            };
+            return [branchNode, endNode];
+        });
+    
+        return [...remainingNodes, ...newNodes];
+    };
+
+    // Function : Update Edge based on Branch
+    const updateEdgesForBranches = (
+        edges: any[],
+        addedBranches: Branch[],
+        deletedBranchIds: string[],
+        conditionalNodeId: string
+    ) => {
+        const remainingEdges = edges.filter(
+            (e) =>
+                !deletedBranchIds.includes(e.source) &&
+                !deletedBranchIds.includes(e.target) &&
+                !deletedBranchIds.some((id) => e.source === `${id}-end` || e.target === `${id}-end`)
+        );
+    
+        const newEdges = addedBranches.flatMap((branch) => [
+            {
+                id: `edge-${conditionalNodeId}-${branch.id}`,
+                source: conditionalNodeId,
+                target: branch.id,
+                type: 'conditional',
+            },
+            {
+                id: `edge-${branch.id}-${branch.id}-end`,
+                source: branch.id,
+                target: `${branch.id}-end`,
+                type: 'addBtn',
+            },
+        ]);
+    
+        return [...remainingEdges, ...newEdges];
+    };    
     
     // Function: Handle Delete
     const handleDelete = () => {
@@ -119,8 +226,8 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                     {/* Render Conditional Node Form */}
                     {selectedNode?.type === 'conditional' && (
                         <ConditionalNodeForm 
-                            nodeName={nodeName} 
-                            setNodeName={setNodeName} 
+                            branches={branches}
+                            setBranches={setBranches}
                         />
                     )}
 
