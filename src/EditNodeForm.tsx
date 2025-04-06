@@ -23,6 +23,7 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
     const [branches, setBranches] = useState<Branch[]>(
         selectedNode?.data?.branches || [{ id: crypto.randomUUID(), label: 'Branch 1' }]
     );
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (node?.data?.label && typeof node.data.label === 'string') {
@@ -39,6 +40,17 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
 
+        // Validate the branches for correct configuration
+        console.log(branches);
+        if (branches.length === 0 || branches.length === 1 || branches.filter(b => b.label === 'branch').length <= 1) {
+            setError('At least one each if and else branch is required.');
+            return; // Prevent submission
+        }
+
+        // No error, proceed to update nodes
+        setError(null); // Reset error state
+
+        // Update selected node
         setNodes((nodes) =>
           nodes.map((n) =>
             n.id === selectedNode.id 
@@ -97,8 +109,9 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                 return node;
             });
         
-        // Find the position of the last "else" node (or any node you choose as the reference)
-        const elseNode = nodes.find((node) => node.type === 'else');
+        // Find the position of the last "else" node 
+        const elseId = selectedNode.data.branches?.find((branchNode: any) => branchNode.type === 'else');
+        const elseNode = nodes.find((node) => elseId == node.id && node.type === 'else');
         
         if (!elseNode) {
             console.error('No "else" node found!');
@@ -270,9 +283,8 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                     />
 
                     {/* FOR ACTION NODE */}
-                    {selectedNode?.type == 'action' && (
+                    {/* {selectedNode?.type == 'action' && (
                         <div>
-                            {/* Placeholder for + Add field */}
                             <button
                                 type="button"
                                 className="text-blue-600 text-sm mb-4"
@@ -281,7 +293,7 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                                 + Add field
                             </button>
                         </div>
-                    )}
+                    )} */}
 
                     {/* FOR IF ELSE NODE */}
                     {/* Render Conditional Node Form */}
@@ -291,6 +303,9 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                             setBranches={setBranches}
                         />
                     )}
+
+                    {/* Error Message */}
+                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
                     <div className='bottom-10 flex flex-row w-full justify-between'>
                         <button

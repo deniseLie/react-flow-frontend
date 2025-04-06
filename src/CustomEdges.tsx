@@ -207,16 +207,6 @@ export const AddBtnEdge: React.FC<EdgeProps> = ({
     )
 }
 
-// export const ConditionalEdge: React.FC<EdgeProps> = ({
-//     id, source, target, sourceX, sourceY, targetX, targetY 
-// }) => {
-//     return (
-//         <div>
-//            <BaseEdge id={id} path={edgePath} className='border-4 border-gray-400'/> 
-//         </div>
-//     )
-// }
-
 export const edgeTypes = {
     addBtn: AddBtnEdge,
 }
