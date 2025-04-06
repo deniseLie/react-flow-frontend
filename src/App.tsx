@@ -21,16 +21,15 @@ function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   // Selected Node State
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNode, setselectedNode] = useState<string | null>(null);
 
   const handleNodeClick = useCallback((_: any, node: any) => {
-    if (node.id !== 'start' && node.id !== 'end') {
-      setSelectedNodeId(node.id);
-      console.log("Selected Node ID", node)
+    if (node.id !== 'start' && node.id !== 'end' && node.type !== 'branch') {
+      setselectedNode(node);
     }
   }, []);
 
-  const closeModal = () => setSelectedNodeId(null);
+  const closeModal = () => setselectedNode(null);
   
   return (
     <ReactFlowProvider>
@@ -45,9 +44,9 @@ function App() {
           onNodeClick={handleNodeClick}
         >
           {/* Render form when node is selected */}
-          {selectedNodeId && (
+          {selectedNode && (
             <EditNodeForm
-              nodeId={selectedNodeId}
+              selectedNode={selectedNode}
               onClose={closeModal}
               setNodes={setNodes}
               setEdges={setEdges}

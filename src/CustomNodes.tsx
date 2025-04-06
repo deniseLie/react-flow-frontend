@@ -1,10 +1,24 @@
-import React, { useState } from "react"
-import { Handle, Position, useReactFlow } from "@xyflow/react"
+import React from "react"
+import { Handle, Position } from "@xyflow/react"
 
 interface NodeProps {
     data: {
       label: string
     }
+}
+
+interface Branch {
+    id: string;
+    name: string;
+}
+
+interface ConditionalNodeData {
+    label: string;
+    branches: Branch[];
+}
+
+interface ConditionalNodeProps extends NodeProps {
+    data: ConditionalNodeData;
 }
 
 export const StartNode: React.FC = () => {
@@ -58,7 +72,9 @@ export const ActionNode: React.FC<NodeProps> = ({ data }) => {
     )
 }
 
-export const ConditionalNode: React.FC<NodeProps> = ({ data }) => {
+export const ConditionalNode: React.FC<ConditionalNodeProps> = ({ data }) => {
+    const branches = data?.branches || [];
+
     return (
         <div className="flex flex-row border border-solid border-gray-300 rounded-lg px-4 py-4 items-center space-x-3 w-60">
             {/* Image Placeholder */}
@@ -68,21 +84,34 @@ export const ConditionalNode: React.FC<NodeProps> = ({ data }) => {
 
             {/* Text */}
             <div>
-                <p className="text-gray-700 font-semibold text-sm">If Else</p>
+                <p className="text-gray-700 font-semibold text-sm">{data?.label ?? 'If Else'}</p>
             </div>
 
-            {/* Connection Handle */}
+            {/* Dynamic Source Handles for Branches */}
+            <div className="flex flex-col space-y-2 mt-4">
+                {branches.map((branch: Branch, index: any) => (
+                    <div key={branch.id} >
+                        <Handle
+                            type="source"
+                            id={branch.id}
+                            position={Position.Bottom}
+                            style={{ visibility: 'hidden' }}
+                        />
+                    </div>
+                ))}
+            </div>
+
+            {/* Top Target Handle */}
             <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }}/>
-            <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }}/>
         </div>
     )
 }
 
-export const BranchNode: React.FC = () => {
+export const BranchNode: React.FC<NodeProps> = ({ data })  => {
     return (
         <>
             <div className="border border-gray-400 rounded-4xl px-25 py-4 w-60 bg-gray-200">
-                <p className="text-gray-400 text-sm font-semibold">BRANCH#</p>
+                <p className="text-gray-400 text-sm font-semibold">{data.label}</p>
             </div>
             <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }}/>
             <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }}/>
