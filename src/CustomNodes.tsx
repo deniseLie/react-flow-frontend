@@ -1,5 +1,11 @@
-import React from "react"
-import { Handle, Position } from "@xyflow/react"
+import React, { useState } from "react"
+import { Handle, Position, useReactFlow } from "@xyflow/react"
+
+interface NodeProps {
+    data: {
+      label: string
+    }
+  }
 
 export const StartNode: React.FC = () => {
     return (
@@ -32,7 +38,8 @@ export const EndNode: React.FC = () => {
     )
 }
 
-export const ActionNode: React.FC = () => {
+export const ActionNode: React.FC<NodeProps> = ({ data }) => {
+    console.log("node in action", data);
     return (
         <div className="flex flex-row border border-solid border-gray-300 rounded-lg px-4 py-4 items-center space-x-3 w-60">
             {/* Image Placeholder */}
@@ -42,7 +49,7 @@ export const ActionNode: React.FC = () => {
 
             {/* Text */}
             <div>
-                <p className="text-gray-700 font-semibold text-sm">Action Node</p>
+                <p className="text-gray-700 font-semibold text-sm">{data?.label ?? 'Action Node'}</p>
             </div>
 
             {/* Connection Handle */}

@@ -55,7 +55,7 @@ export const AddBtnEdge: React.FC<EdgeProps> = ({
                     // y: sourceY + 100 
                 },
                 type: 'action',
-                data: {}
+                data: { label: "Action Node" }
             })
         })
 
