@@ -39,7 +39,6 @@ export const EndNode: React.FC = () => {
 }
 
 export const ActionNode: React.FC<NodeProps> = ({ data }) => {
-    console.log("node in action", data);
     return (
         <div className="flex flex-row border border-solid border-gray-300 rounded-lg px-4 py-4 items-center space-x-3 w-60">
             {/* Image Placeholder */}

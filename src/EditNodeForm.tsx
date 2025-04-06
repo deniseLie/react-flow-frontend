@@ -5,9 +5,10 @@ interface EditNodeFormProps {
     nodeId: string;
     onClose: () => void;
     setNodes: (setter: (nodes: any[]) => any[]) => void;
+    setEdges: (setter: (edges: any[]) => any[]) => void;
 }
 
-const EditNodeForm: React.FC<EditNodeFormProps> = ({ nodeId, onClose, setNodes }) => {
+const EditNodeForm: React.FC<EditNodeFormProps> = ({ nodeId, onClose, setNodes, setEdges }) => {
 
     // Hook to interact with React Flow
     const { getNode } = useReactFlow(); 
@@ -16,7 +17,6 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ nodeId, onClose, setNodes }
     const [nodeName, setNodeName] = useState('');
 
     useEffect(() => {
-        console.log("EDIT NODE OFRM", JSON.stringify(node));
         if (node?.data?.label && typeof node.data.label === 'string') {
             setNodeName(node.data.label);
         }
@@ -42,7 +42,37 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ nodeId, onClose, setNodes }
     
     // Function: Handle Delete
     const handleDelete = () => {
+
+        // Delete node
         setNodes((nodes) => nodes.filter((n) => n.id !== nodeId));
+
+        // Remove edges
+        setEdges((edges: any[]) => {
+
+            // Find edges connecting to the node
+            const remainingEdges = edges.filter(
+                (e: any) => e.source !== nodeId && e.target !== nodeId
+            );
+
+            const connectedEdges = edges.filter(
+                (e) => e.source === nodeId || e.target === nodeId
+            );
+
+            if (connectedEdges.length == 2) {
+                const [sourceEdge, targetEdge] = connectedEdges;
+                const newEdge = {
+                    id: `edge-${sourceEdge.source}-${targetEdge.target}`,
+                    source: sourceEdge.source,
+                    target: targetEdge.target,
+                    type: 'addBtn',
+                };
+
+                return [...remainingEdges, newEdge];
+            }
+
+            return remainingEdges;
+        })
+
         onClose();
     };
 
@@ -106,8 +136,6 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ nodeId, onClose, setNodes }
                                 Save
                             </button>
                         </div>
-
-                        
                     </div>
                 </form>
             </div>

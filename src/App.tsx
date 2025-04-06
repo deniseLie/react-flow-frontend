@@ -50,6 +50,7 @@ function App() {
               nodeId={selectedNodeId}
               onClose={closeModal}
               setNodes={setNodes}
+              setEdges={setEdges}
             />
           )}
           <Background />
