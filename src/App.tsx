@@ -23,6 +23,24 @@ function App() {
   // Selected Node State
   const [selectedNode, setselectedNode] = useState<string | null>(null);
 
+  // // State : Node Id
+  // const [nodeIdCounters, setNodeIdCounters] = useState({
+  //   actionNode: 1,    // Starting ID for Action Nodes
+  //   ifElseNode: 1,    // Starting ID for If/Else Nodes
+  //   branchLabel: 1,   // Starting ID for Branch Labels
+  // })
+
+  // // Function : generate new node IDs
+  // const generateNodeId = (type) => {
+  //   setNodeIdCounters((prevState) => {
+  //     const newId = prevState[type] + 1;
+  //     return { ...prevState, [type]: newId };
+  //   });
+
+  //   return `${type}-node-${nodeIdCounters[type]}`;
+  // };
+
+  // Function : 
   const handleNodeClick = useCallback((_: any, node: any) => {
     if (node.type == 'action' || node.type == 'conditional') {
       setselectedNode(node);
@@ -50,6 +68,8 @@ function App() {
               onClose={closeModal}
               setNodes={setNodes}
               setEdges={setEdges}
+              edges={edges}
+              nodes={nodes}
             />
           )}
           <Background />

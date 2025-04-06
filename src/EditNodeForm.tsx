@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Node, useReactFlow } from '@xyflow/react';
 import ConditionalNodeForm from './ConditionalNodeForm';
 import { Branch } from './types';
+import { deleteDownstream } from './utils';
 
 interface EditNodeFormProps {
     selectedNode: any;
     onClose: () => void;
     setNodes: (setter: (nodes: any[]) => any[]) => void;
     setEdges: (setter: (edges: any[]) => any[]) => void;
+    edges: any;
+    nodes: any;
 }
 
-const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setNodes, setEdges }) => {
+const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setNodes, setEdges, edges, nodes }) => {
 
     // Hook to interact with React Flow
     const { getNode } = useReactFlow(); 
@@ -151,35 +154,74 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
     // Function: Handle Delete
     const handleDelete = () => {
 
-        // Delete node
-        setNodes((nodes) => nodes.filter((n) => n.id !== selectedNode.id));
+        // IF conditional, delete downstream first
+        if (selectedNode.type === 'conditional') {
+            deleteDownstream(selectedNode.id, setNodes, setEdges, edges);
 
-        // Remove edges
-        setEdges((edges: any[]) => {
+            // Find the previous node connected to the selected node
+            const previousEdge = edges.find((e: any) => e.target === selectedNode.id);
+            const previousNodeId = previousEdge ? previousEdge.source : null;
 
-            // Find edges connecting to the node
-            const remainingEdges = edges.filter(
-                (e: any) => e.source !== selectedNode.id && e.target !== selectedNode.id
-            );
+            // If a previous node exists, connect it to a new end node
+            if (previousNodeId) {
+                const previousNode = nodes.find((n: any) => n.id === previousNodeId); // Get the previous node
 
-            const connectedEdges = edges.filter(
-                (e) => e.source === selectedNode.id || e.target === selectedNode.id
-            );
+                if (previousNode) {
 
-            if (connectedEdges.length == 2) {
-                const [sourceEdge, targetEdge] = connectedEdges;
-                const newEdge = {
-                    id: `edge-${sourceEdge.source}-${targetEdge.target}`,
-                    source: sourceEdge.source,
-                    target: targetEdge.target,
-                    type: 'addBtn',
-                };
+                    // If a previous node exists, connect it to a new end node
+                    const newEndNodeId = `${previousNodeId}-end`;  // End node ID
+                    const newEndNode = {
+                        id: newEndNodeId,
+                        position: { x: previousNode.position.x, y: previousNode.position.y + 150 },
+                        type: 'end',
+                        data: { label: 'END' },
+                    };
 
-                return [...remainingEdges, newEdge];
+                    // Create new edge connecting previous node to the new end node
+                    const newEdge = {
+                        id: `edge-${previousNodeId}-end`,  // Unique edge ID
+                        source: previousNodeId,            // Source node is the previous node
+                        target: newEndNodeId,              // Target is the new end node
+                        type: 'addBtn',                    // Edge type (you can adjust this based on your needs)
+                    };
+
+                    // Add the new end node and the new edge
+                    setNodes((prevNodes) => [...prevNodes, newEndNode]);
+                    setEdges((prevEdges) => [...prevEdges, newEdge]);   
+                }
             }
+        } else {
 
-            return remainingEdges;
-        })
+            // Delete node
+            setNodes((nodes) => nodes.filter((n) => n.id !== selectedNode.id));
+
+            // Remove edges
+            setEdges((edges: any[]) => {
+
+                // Find edges connecting to the node
+                const remainingEdges = edges.filter(
+                    (e: any) => e.source !== selectedNode.id && e.target !== selectedNode.id
+                );
+
+                const connectedEdges = edges.filter(
+                    (e) => e.source === selectedNode.id || e.target === selectedNode.id
+                );
+
+                if (connectedEdges.length == 2) {
+                    const [sourceEdge, targetEdge] = connectedEdges;
+                    const newEdge = {
+                        id: `edge-${sourceEdge.source}-${targetEdge.target}`,
+                        source: sourceEdge.source,
+                        target: targetEdge.target,
+                        type: 'addBtn',
+                    };
+
+                    return [...remainingEdges, newEdge];
+                }
+
+                return remainingEdges;
+            })
+        }
 
         onClose();
     };

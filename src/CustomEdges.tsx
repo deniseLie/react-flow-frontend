@@ -18,6 +18,7 @@ export const AddBtnEdge: React.FC<EdgeProps> = ({
     const [menuVisible, setMenuVisible] = useState(false);
     const toggleMenuVisible = () => setMenuVisible(!menuVisible);
 
+    // Function : Handle Add Node
     const handleAddNode = (type: 'action' | 'conditional') => {
         const timestamp = Date.now();
 
