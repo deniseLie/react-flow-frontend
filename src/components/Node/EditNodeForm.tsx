@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Node, useReactFlow } from '@xyflow/react';
 import ConditionalNodeForm from './ConditionalNodeForm';
 import { Branch } from '../../types/types';
-import { deleteDownstream, handleDeleteConnectedEdges, handleDeleteDownstream, isDownstream } from '../../utils/utils';
+import { deleteDownstream, distributeNodesEvenly, handleDeleteConnectedEdges, handleDeleteDownstream } from '../../utils/utils';
 
 interface EditNodeFormProps {
     selectedNode: any;
@@ -52,8 +52,8 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
             return; // Prevent submission
         }
 
-        // No error, proceed to update nodes
-        setError(null); // Reset error state
+        // No error, reset error state
+        setError(null); 
 
         // Update selected node
         setNodes((nodes) =>
@@ -68,7 +68,6 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
 
         // Add and Delete Branch Nodes
         if (selectedNode?.type === 'conditional') {
-
             const { addedBranches, deletedBranchIds } = getBranchChanges(selectedNode.data?.branches, branches);
             setNodes((nodes) => updateNodesForBranches(nodes, addedBranches, deletedBranchIds));
             setEdges((edges) => updateEdgesForBranches(edges, addedBranches, deletedBranchIds, selectedNode.id));
@@ -114,73 +113,23 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                 return node;
             });
 
-        // Find the rightmost branch excluding the 'else' node
-        const rightmostBranch = selectedNode.data.branches
-            ?.filter((branchNode: any) => branchNode.type !== 'else')  // Exclude the 'else' node
-            .slice(-1)[0];  // Get the last element of the filtered array
-
-        if (!rightmostBranch) {
-            console.error('No valid branch node found!');
-            return remainingNodes;  // If no valid branch node is found, return the remaining nodes as they are.
+        if (addedBranches.length == 0 && deletedBranchIds.length == 0) {
+            return [...remainingNodes];
         }
+        // console.log(remainingNodes);
+        // console.log('branches', branches);
 
-        // Find the node corresponding to the rightmost branch
-        const rightmostBranchNode = nodes.find((node: any) => node.id === rightmostBranch.id);
-
-        if (!rightmostBranchNode) {
-            console.error('No node found for the rightmost branch!');
-            return remainingNodes;  // If no node is found for the branch, return the remaining nodes.
-        }
-        // Calculate even X positions for added branches
-        let previousX = rightmostBranchNode.position.x || 100;
-        let previousY = rightmostBranchNode.position.y || 200;
+        // Now, update or create nodes for added branches
+        const updatedNodes = distributeNodesEvenly(selectedNode, addedBranches, branches, remainingNodes);
         
-        // Calculate even X positions for added branches
-        const newNodes = addedBranches.map((branch) => {
-            const xPosition = previousX; 
-            const yPosition = previousY; 
-            console.log('Branch X:', branch); 
+        console.log('\n');
+        console.log("updatedNodes", updatedNodes);
 
-            const branchNode = {
-                id: branch.id,
-                position: { x: xPosition, y: yPosition },
-                type: 'branch',
-                data: { label: branch.label },
-            };
-    
-            const endNode = {
-                id: `${branch.id}-end`,
-                position: { x: xPosition, y: yPosition + 200 }, // Slightly adjust Y for end node
-                type: 'end',
-                data: { label: 'END' },
-            };
+        // Filter out any nodes that were just updated so we don't duplicate
+        const updatedNodeIds = new Set(updatedNodes.map((n) => n.id));
+        const finalRemaining = remainingNodes.filter((n) => !updatedNodeIds.has(n.id));
 
-            // Update the previous X and Y for the next branch
-            previousX += 250;
-
-            return [branchNode, endNode];
-        }).flat();
-
-        // Add the "else" node at the rightmost end
-        const elseNodeNew = {
-            ...rightmostBranchNode,
-            position: { x: previousX + addedBranches.length * 250, y: previousY },  // Position the "else" node after all branches
-        };
-
-        // Shift all nodes connected to the "else" node to the same X position
-        const updatedNodes = remainingNodes.map((node) => {
-            // If the node is connected to the "else" node, move it to the same X position
-            if (isDownstream(node, elseNodeNew, edges)) {
-                console.log("elseNodeNew", elseNodeNew)
-                return {
-                    ...node,
-                    position: { x: previousX + 250, y: node.position.y },  // Set X to the "else" node's X
-                };
-            }
-            return node;
-        });
-    
-        return [...updatedNodes, ...newNodes, elseNodeNew];
+        return [...finalRemaining, ...updatedNodes];
     };
 
     // Function : Update Edge based on Branch

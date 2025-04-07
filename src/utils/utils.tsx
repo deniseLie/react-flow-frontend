@@ -1,6 +1,7 @@
 import { SetStateAction, Dispatch } from 'react';
 
 import { Node, Edge } from "@xyflow/react"
+import { Branch } from '../types/types';
 
 // Delete Down Stream
 export const deleteDownstream = (
@@ -40,16 +41,6 @@ export const deleteDownstream = (
   setEdges((edges) => edges.filter((e) => !edgesToDelete.includes(e.id)));
 };
 
-// Check if a node is downstream of the "else" node
-export const isDownstream = (node: Node, elseNode: Node, edges: any[]): boolean => {
-    // Find edges originating from the "else" node or leading to the current node
-    const downstreamEdges = edges.filter(
-        (edge) => edge.source === elseNode.id && edge.target === node.id
-    );
-    
-    // If there are downstream edges, it means the node is downstream of the "else" node
-    return downstreamEdges.length > 0;
-};
 
 // Delete connected edges and add new edge
 export const handleDeleteConnectedEdges = (
@@ -135,3 +126,96 @@ export const handleDeleteDownstream = (
     }
   }
 };
+
+// Function : Find down stream nodes 
+export const findDownstreamNodes = (parentId: string, nodes: Node[]): Node[] => {
+  const visited = new Set<string>();
+  const queue: string[] = [parentId];
+  const downstream: Node[] = [];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    if (!currentId || visited.has(currentId)) continue;
+
+    visited.add(currentId);
+
+    const children = nodes.filter(node =>
+      node.id !== parentId &&
+      node.data?.parent === currentId
+    );
+
+    children.forEach(child => {
+      downstream.push(child);
+      queue.push(child.id);
+    });
+  }
+
+  return downstream;
+};
+
+
+// Distribute nodes evenly starting from the parent
+export const distributeNodesEvenly = (
+  parentNode: Node, addedBranches: Branch[], branches: Branch[], nodes:Node[],
+): Node[] => {
+  let total_length = (branches.length * 20 + (branches.length - 1) * 250) / 2;
+
+  let currentX = (parentNode.position.x + 30) - total_length
+  let currentY = parentNode.position.x + 200
+
+  // Separate the else nodes from other branches
+  const nonElseBranches = branches.filter(branch => branch.type !== 'else');
+  const elseBranches = branches.filter(branch => branch.type === 'else');
+  // console.log('nonElseBranches', nonElseBranches);
+  // console.log('elseBranches', elseBranches);
+
+  const updatedNodes: Node[] = [];
+
+  // Process all non-else branches first
+  [...nonElseBranches, ...elseBranches].forEach(branch => {
+    updatedNodes.push(...processBranchNode(branch, nodes, currentX, currentY));
+    currentX += 250;
+  });
+
+  return updatedNodes;
+};
+
+// Update or create a branch with end node and adjust positions
+const processBranchNode = (
+  branch: Branch, existingNodes: Node[], x: number, y: number
+): Node[] => {
+  const result: Node[] = [];
+
+  const branchNode = existingNodes.find(node => node.id === branch.id);
+
+  if (branchNode) {
+    result.push({
+      ...branchNode,
+      position: { x, y },
+    });
+  } else {
+    result.push(...createBranchAndEndNode(branch, x, y));
+  }
+  console.log(result);
+
+  return result;
+};
+
+// Create a branch node and its corresponding end node
+const createBranchAndEndNode = (branch: Branch, currentX: number, currentY: number): Node[] => {
+  const branchNode = {
+    id: branch.id,
+    position: { x: currentX, y: currentY },
+    type: 'branch',
+    data: { label: branch.label },
+  };
+
+  const endNode = {
+    id: `${branch.id}-end`,
+    position: { x: currentX, y: currentY + 200 }, // Adjust Y for end node
+    type: 'end',
+    data: { label: 'END' },
+  };
+
+  return [branchNode, endNode];
+}
