@@ -39,3 +39,14 @@ export const deleteDownstream = (
   setNodes((nodes) => nodes.filter((n) => !nodesToDelete.includes(n.id)));
   setEdges((edges) => edges.filter((e) => !edgesToDelete.includes(e.id)));
 };
+
+// Helper function to check if a node is downstream of the "else" node
+export const isDownstream = (node: Node, elseNode: Node, edges: any[]): boolean => {
+    // Find edges originating from the "else" node or leading to the current node
+    const downstreamEdges = edges.filter(
+        (edge) => edge.source === elseNode.id && edge.target === node.id
+    );
+    
+    // If there are downstream edges, it means the node is downstream of the "else" node
+    return downstreamEdges.length > 0;
+};
