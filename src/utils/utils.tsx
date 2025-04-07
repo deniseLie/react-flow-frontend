@@ -128,35 +128,33 @@ export const handleDeleteDownstream = (
 };
 
 // Function : Find down stream nodes 
-export const findDownstreamNodes = (parentId: string, nodes: Node[]): Node[] => {
-  const visited = new Set<string>();
-  const queue: string[] = [parentId];
+export const findDownstreamNodes = (startNodeId: string, nodes: Node[], edges: Edge[]): Node[] => {
+  const visitedNodes = new Set<string>();
   const downstream: Node[] = [];
 
-  while (queue.length > 0) {
-    const currentId = queue.shift();
-    if (!currentId || visited.has(currentId)) continue;
+  const traverse = (nodeId: string) => {
+    if (visitedNodes.has(nodeId)) return;
+    visitedNodes.add(nodeId);
 
-    visited.add(currentId);
+    const outgoingEdges = edges.filter((e) => e.source === nodeId);
 
-    const children = nodes.filter(node =>
-      node.id !== parentId &&
-      node.data?.parent === currentId
-    );
-
-    children.forEach(child => {
-      downstream.push(child);
-      queue.push(child.id);
+    outgoingEdges.forEach((edge) => {
+      const childNode = nodes.find((n) => n.id === edge.target);
+      if (childNode) {
+        downstream.push(childNode);
+        traverse(childNode.id);
+      }
     });
-  }
+  };
 
+  traverse(startNodeId);
   return downstream;
 };
 
 
 // Distribute nodes evenly starting from the parent
 export const distributeNodesEvenly = (
-  parentNode: Node, addedBranches: Branch[], branches: Branch[], nodes:Node[],
+  parentNode: Node, addedBranches: Branch[], branches: Branch[], nodes:Node[], edges: Edge[]
 ): Node[] => {
   let total_length = (branches.length * 20 + (branches.length - 1) * 250) / 2;
 
@@ -166,14 +164,12 @@ export const distributeNodesEvenly = (
   // Separate the else nodes from other branches
   const nonElseBranches = branches.filter(branch => branch.type !== 'else');
   const elseBranches = branches.filter(branch => branch.type === 'else');
-  // console.log('nonElseBranches', nonElseBranches);
-  // console.log('elseBranches', elseBranches);
 
   const updatedNodes: Node[] = [];
 
   // Process all non-else branches first
   [...nonElseBranches, ...elseBranches].forEach(branch => {
-    updatedNodes.push(...processBranchNode(branch, nodes, currentX, currentY));
+    updatedNodes.push(...processBranchNode(branch, nodes, edges, currentX, currentY));
     currentX += 250;
   });
 
@@ -182,23 +178,37 @@ export const distributeNodesEvenly = (
 
 // Update or create a branch with end node and adjust positions
 const processBranchNode = (
-  branch: Branch, existingNodes: Node[], x: number, y: number
+  branch: Branch, existingNodes: Node[], edges: Edge[], x: number, y: number
 ): Node[] => {
-  const result: Node[] = [];
+  const updated: Node[] = [];
 
+  // Existing Node
   const branchNode = existingNodes.find(node => node.id === branch.id);
 
   if (branchNode) {
-    result.push({
-      ...branchNode,
-      position: { x, y },
-    });
-  } else {
-    result.push(...createBranchAndEndNode(branch, x, y));
-  }
-  console.log(result);
+    const deltaX = x - branchNode.position.x;
 
-  return result;
+    // Update this branch node
+    const updatedBranch = { ...branchNode, position: { x, y } };
+    updated.push(updatedBranch);
+
+    // Find and shift all downstream nodes
+    const downstream = findDownstreamNodes(branchNode.id, existingNodes, edges);
+    console.log(downstream)
+
+    downstream.forEach((node: Node) => {
+      updated.push({
+        ...node,
+        position: { x: node.position.x + deltaX, y: node.position.y },
+      });
+    })
+    
+  // New Node
+  } else {
+    updated.push(...createBranchAndEndNode(branch, x, y));
+  }
+
+  return updated;
 };
 
 // Create a branch node and its corresponding end node

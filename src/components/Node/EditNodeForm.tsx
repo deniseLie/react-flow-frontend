@@ -120,7 +120,7 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
         // console.log('branches', branches);
 
         // Now, update or create nodes for added branches
-        const updatedNodes = distributeNodesEvenly(selectedNode, addedBranches, branches, remainingNodes);
+        const updatedNodes = distributeNodesEvenly(selectedNode, addedBranches, branches, remainingNodes, edges);
         
         console.log('\n');
         console.log("updatedNodes", updatedNodes);
