@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Node, useReactFlow } from '@xyflow/react';
 import ConditionalNodeForm from './ConditionalNodeForm';
 import { Branch } from '../../types/types';
-import { deleteDownstream, isDownstream } from '../../utils/utils';
+import { deleteDownstream, handleDeleteConnectedEdges, handleDeleteDownstream, isDownstream } from '../../utils/utils';
 
 interface EditNodeFormProps {
     selectedNode: any;
@@ -40,9 +40,14 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
 
+        // Validate node name
+        if (nodeName == '' || nodeName == null) {
+            setError('Node name is required');
+            return; // Prevent submission
+        }
+
         // Validate the branches for correct configuration
-        console.log(branches);
-        if (branches.length <= 1) {
+        if (selectedNode?.type === 'conditional' && branches.length <= 1) {
             setError('At least one each if and else branch is required.');
             return; // Prevent submission
         }
@@ -215,71 +220,11 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
 
         // IF conditional, delete downstream first
         if (selectedNode.type === 'conditional') {
-            deleteDownstream(selectedNode.id, setNodes, setEdges, edges);
+            handleDeleteDownstream(selectedNode.id, nodes, edges, setNodes, setEdges);
 
-            // Find the previous node connected to the selected node
-            const previousEdge = edges.find((e: any) => e.target === selectedNode.id);
-            const previousNodeId = previousEdge ? previousEdge.source : null;
-
-            // If a previous node exists, connect it to a new end node
-            if (previousNodeId) {
-                const previousNode = nodes.find((n: any) => n.id === previousNodeId); // Get the previous node
-
-                if (previousNode) {
-
-                    // If a previous node exists, connect it to a new end node
-                    const newEndNodeId = `${previousNodeId}-end`;  // End node ID
-                    const newEndNode = {
-                        id: newEndNodeId,
-                        position: { x: previousNode.position.x, y: previousNode.position.y + 150 },
-                        type: 'end',
-                        data: { label: 'END' },
-                    };
-
-                    // Create new edge connecting previous node to the new end node
-                    const newEdge = {
-                        id: `edge-${previousNodeId}-end`,  // Unique edge ID
-                        source: previousNodeId,            // Source node is the previous node
-                        target: newEndNodeId,              // Target is the new end node
-                        type: 'addBtn',                    // Edge type (you can adjust this based on your needs)
-                    };
-
-                    // Add the new end node and the new edge
-                    setNodes((prevNodes) => [...prevNodes, newEndNode]);
-                    setEdges((prevEdges) => [...prevEdges, newEdge]);   
-                }
-            }
+        // Else, delete only node - connect the edge
         } else {
-
-            // Delete node
-            setNodes((nodes) => nodes.filter((n) => n.id !== selectedNode.id));
-
-            // Remove edges
-            setEdges((edges: any[]) => {
-
-                // Find edges connecting to the node
-                const remainingEdges = edges.filter(
-                    (e: any) => e.source !== selectedNode.id && e.target !== selectedNode.id
-                );
-
-                const connectedEdges = edges.filter(
-                    (e) => e.source === selectedNode.id || e.target === selectedNode.id
-                );
-
-                if (connectedEdges.length == 2) {
-                    const [sourceEdge, targetEdge] = connectedEdges;
-                    const newEdge = {
-                        id: `edge-${sourceEdge.source}-${targetEdge.target}`,
-                        source: sourceEdge.source,
-                        target: targetEdge.target,
-                        type: 'addBtn',
-                    };
-
-                    return [...remainingEdges, newEdge];
-                }
-
-                return remainingEdges;
-            })
+            handleDeleteConnectedEdges(selectedNode.id, nodes, edges, setNodes, setEdges);
         }
 
         onClose();
@@ -332,9 +277,9 @@ const EditNodeForm: React.FC<EditNodeFormProps> = ({ selectedNode, onClose, setN
                     )}
 
                     {/* Error Message */}
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                    {error && <p className="text-red-500 text-sm mb-10">{error}</p>}
 
-                    <div className='bottom-10 flex flex-row w-full justify-between'>
+                    <div className='flex flex-row w-full justify-between'>
                         <button
                             type="button"
                             onClick={handleDelete}
