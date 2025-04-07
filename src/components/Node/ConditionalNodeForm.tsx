@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Branch } from "./types";
+import { Branch } from "../../types/types";
 
 interface ConditionalNodeFormProps {
     branches: Branch[]
@@ -33,7 +33,7 @@ const ConditionalNodeForm: React.FC<ConditionalNodeFormProps> = ({ branches, set
         event.preventDefault();
         setBranches((prev: Branch[]) => [
             ...prev, 
-            { id: crypto.randomUUID(), label: `Branch #${prev.length}`, type: 'if' }
+            { id: crypto.randomUUID(), label: `Branch #${prev.length}`, type: 'branch' }
         ]);
     };   
 

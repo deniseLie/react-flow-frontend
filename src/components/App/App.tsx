@@ -8,9 +8,9 @@ import {
   ReactFlowProvider
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { nodeTypes } from './CustomNodes';
-import { edgeTypes } from './CustomEdges';
-import EditNodeForm from './EditNodeForm';
+import { nodeTypes } from '../Node/CustomNodes';
+import { edgeTypes } from '../Node/CustomEdges';
+import EditNodeForm from '../Node/EditNodeForm';
 
 // npm run build:css
 
